@@ -12,7 +12,7 @@ type DashboardSummary struct {
 	Title string `json:"title"`
 }
 
-func getDashboardList(body []byte) []DashboardSummary {
+func GetDashboardList(body []byte) []DashboardSummary {
 	var dashboards []DashboardSummary
 	err := json.Unmarshal(body, &dashboards)
 	if err != nil {
@@ -22,27 +22,27 @@ func getDashboardList(body []byte) []DashboardSummary {
 	return dashboards
 }
 
-func exportDashboards(apiToken, grafanaURL string) {
+func ExportDashboards(apiToken, grafanaURL string) {
 	sourceUrl := fmt.Sprintf("%s/api/search?query=&starred=false", grafanaURL)
 	err := os.MkdirAll("Dashboards", 0755)
 	if err != nil {
 		fmt.Println("Error creating directory:", err)
 		return
 	}
-	body, err := httpReq("GET", sourceUrl, apiToken, Response{})
+	body, err := GetReq(sourceUrl, apiToken)
 	if err != nil {
 		fmt.Println("Error fetching dashboard:", err)
 		return
 	}
-	dashboards := getDashboardList(body)
-	saveDashboards(apiToken, grafanaURL, dashboards)
+	dashboards := GetDashboardList(body)
+	SaveDashboards(apiToken, grafanaURL, dashboards)
 }
 
-func saveDashboards(apiToken, grafanaURL string, dashboards []DashboardSummary) {
+func SaveDashboards(apiToken, grafanaURL string, dashboards []DashboardSummary) {
 	for _, dashboard := range dashboards {
 		fmt.Printf("ID: %d, UID: %s, Title: %s\n", dashboard.ID, dashboard.UID, dashboard.Title)
 		dashboardURL := fmt.Sprintf("%s/api/dashboards/uid/%s", grafanaURL, dashboard.UID)
-		body, err := httpReq("GET", dashboardURL, apiToken, Response{})
+		body, err := GetReq(dashboardURL, apiToken)
 		if err != nil {
 			fmt.Println("Error fetching dashboard:", err)
 			return
@@ -56,4 +56,4 @@ func saveDashboards(apiToken, grafanaURL string, dashboards []DashboardSummary) 
 		fmt.Println("Dashboard saved as:", filename)
 	}
 }
-func importDashboards(dashboards []DashboardSummary) {}
+func ImportDashboards(dashboards []DashboardSummary) {}

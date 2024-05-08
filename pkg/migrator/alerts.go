@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-func exportAlerts(apiToken, grafanaURL string) (Response, error) {
+func ExportAlerts(apiToken, grafanaURL string) (Response, error) {
 	url := fmt.Sprintf("%s/api/v1/provisioning/alert-rules/export", grafanaURL)
-	body, err := httpReq("GET", url, apiToken, Response{})
+	body, err := GetReq(url, apiToken)
 	if err != nil {
 		return Response{}, err
 	}
@@ -18,9 +18,10 @@ func exportAlerts(apiToken, grafanaURL string) (Response, error) {
 	}
 	return alerts, nil
 }
-func importAlerts(apiToken, grafanaURL string, alerts Response) error {
+
+func ImportAlerts(apiToken, grafanaURL string, alerts Response) error {
 	url := fmt.Sprintf("%s/api/v1/provisioning/alert-rules", grafanaURL)
-	_, err := httpReq("POST", url, apiToken, alerts)
+	_, err := PostReq(url, apiToken, alerts)
 	if err != nil {
 		return err
 	}
