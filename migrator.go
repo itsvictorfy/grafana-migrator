@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/itsvictorfy/grafana-migrator/cmd"
+	"github.com/itsvictorfy/grafana-migrator/migrator-cli/cmd"
 	"github.com/itsvictorfy/grafana-migrator/pkg/migrator"
 	"github.com/joho/godotenv"
 )
@@ -26,8 +26,23 @@ func initDocker() (string, string, string) {
 	apiToken := os.Getenv("API_TOKEN")
 	return sourceUrl, destUrl, apiToken
 }
+
+func MigrateDashboards(source, dest, token string) {
+	dashboards, err := migrator.GetDashboardList(token, source)
+	if err != nil {
+		log.Println("Error during dahsboard export: %s", err)
+		return
+	}
+	err = migrator.SetDashboards(dest, token, dashboards)
+	if err != nil {
+		log.Println("Error during dahsboard import %s", err)
+		return
+	}
+
+}
+func MigrateAlers() {}
 func main() {
 
 	cmd.Execute()
-	migrator.GetDashboardList()
+	MigrateDashboards(initDocker())
 }

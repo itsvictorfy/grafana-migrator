@@ -2,7 +2,6 @@ package migrator
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -10,19 +9,9 @@ import (
 )
 
 // Preforms POST request get url, apikey, data and return response.Body and error
-func PostReq(url, apikey string, data Response) ([]byte, error) {
+func PostReq(url, apikey string, jsonData []byte) ([]byte, error) {
 	client := &http.Client{}
-
-	if len(data.Groups) == 0 {
-		log.Println("Error POST creating request: Data is empty")
-		return nil, fmt.Errorf("error post creating request: data is empty")
-	}
 	// Convert data to JSON bytes
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		log.Println("Error marshalling PostRequest:", err)
-		return nil, fmt.Errorf("error marshalling PostRequest: %w", err)
-	}
 
 	// Create a new request with the data in the body
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
@@ -40,11 +29,7 @@ func PostReq(url, apikey string, data Response) ([]byte, error) {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
 	if resp.StatusCode != 200 {
-		if err != nil {
-			log.Println("Error sending request:", err)
-			return nil, fmt.Errorf("error response status: %s", resp.Status)
-		}
-
+		log.Printf("Error: Status Code : %d", resp.StatusCode)
 		return nil, fmt.Errorf("error response status: %s", resp.Status)
 	}
 	defer resp.Body.Close()

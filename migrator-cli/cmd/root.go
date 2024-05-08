@@ -4,9 +4,17 @@ Copyright © 2024 Victor Fun-Young victor@funyoung.org
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+)
+
+var (
+	source  string
+	target  string
+	token   string
+	verbose bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -27,23 +35,37 @@ to quickly create a Cobra application.`,
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	// Check if the version flag is set
+	if versionFlagSet() {
+		// If the version flag is set, print the version and exit
+		fmt.Printf("Grafana Migrator Version: 1.0.2")
+		return
+	}
+
+	// If the version flag is not set, execute the root command
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
+// versionFlagSet checks if the version flag is set
+func versionFlagSet() bool {
+	versionFlag, _ := rootCmd.Flags().GetBool("version")
+	return versionFlag
+}
+
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// Flags for source, target, and token
+	rootCmd.PersistentFlags().StringVarP(&source, "source", "s", "", "Source Grafana instance")
+	rootCmd.PersistentFlags().StringVarP(&target, "target", "t", "", "Target Grafana instance")
+	rootCmd.PersistentFlags().StringVarP(&token, "token", "k", "", "User token")
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.grafana-migrator.yaml)")
+	// Verbose flag
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.Flags().StringP("source", "source", "", "Source Grafana instance")
-	rootCmd.Flags().StringP("target", "target", "", "Target Grafana instance")
-	rootCmd.Flags().StringP("token", "token", "", "User")
+	// Help flag
+	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help for "+rootCmd.Name())
+
+	// Version flag
+	rootCmd.PersistentFlags().BoolP("version", "V", false, "Print the version number")
 }
