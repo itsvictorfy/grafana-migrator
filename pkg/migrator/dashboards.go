@@ -23,56 +23,11 @@ type Dashboardinfo struct {
 	FolderURL   string   `json:"folderUrl,omitempty"`
 }
 
-// func GetDashboardList(body []byte) []DashboardSummary {
-// 	var dashboards []DashboardSummary
-// 	err := json.Unmarshal(body, &dashboards)
-// 	if err != nil {
-// 		fmt.Println("Error decoding JSON:", err)
-// 		return nil
-// 	}
-// 	return dashboards
-// }
-
-// func ExportDashboards(apiToken, grafanaURL string) {
-// 	sourceUrl := fmt.Sprintf("%s/api/search?query=&starred=false", grafanaURL)
-// 	err := os.MkdirAll("Dashboards", 0755)
-// 	if err != nil {
-// 		fmt.Println("Error creating directory:", err)
-// 		return
-// 	}
-// 	body, err := GetReq(sourceUrl, apiToken)
-// 	if err != nil {
-// 		fmt.Println("Error fetching dashboard:", err)
-// 		return
-// 	}
-// 	dashboards := GetDashboardList(body)
-// 	SaveDashboards(apiToken, grafanaURL, dashboards)
-// }
-
-//	func SaveDashboards(apiToken, grafanaURL string, dashboards []DashboardSummary) {
-//		for _, dashboard := range dashboards {
-//			fmt.Printf("ID: %d, UID: %s, Title: %s\n", dashboard.ID, dashboard.UID, dashboard.Title)
-//			dashboardURL := fmt.Sprintf("%s/api/dashboards/uid/%s", grafanaURL, dashboard.UID)
-//			body, err := GetReq(dashboardURL, apiToken)
-//			if err != nil {
-//				fmt.Println("Error fetching dashboard:", err)
-//				return
-//			}
-//			filename := fmt.Sprintf("Dashboards/dashboard_%s.json", dashboard.UID)
-//			err = os.WriteFile(filename, body, 0644)
-//			if err != nil {
-//				fmt.Println("Error writing file:", err)
-//				return
-//			}
-//			fmt.Println("Dashboard saved as:", filename)
-//		}
-//	}
-//
 // Get a list of all dashbaords -> Source and Apitoken -> retrn Dashboard list, error
-func GetDashboardList(source, apiToken string) ([]Dashboardinfo, error) {
+func GetDashboardList(source Grafana) ([]Dashboardinfo, error) {
 	var dashboards []Dashboardinfo
-	sourceUrl := fmt.Sprintf("%s/api/search?query=&starred=false", source)
-	body, err := GetReq(sourceUrl, apiToken)
+	reqUrl := fmt.Sprintf("%s/api/search?query=&starred=false", source.Url)
+	body, err := GetReq(reqUrl, source.ApiToken)
 	if err != nil {
 		log.Println("Error fetching dashboard:", err)
 		return nil, fmt.Errorf("error fetching dashboard list: %s", err)
@@ -85,12 +40,12 @@ func GetDashboardList(source, apiToken string) ([]Dashboardinfo, error) {
 }
 
 // Get a dashboard by UID -> Source and Apitoken and Dashboard UID -> return Dashboard, error
-func GetDashboardByUid(source, apiToken, dbUid string) ([]byte, error) {
-	sourceUrl := fmt.Sprintf("%s/api/dashboards/uid/%s", source, dbUid)
-	body, err := GetReq(sourceUrl, apiToken)
+func GetDashboardByUid(source Grafana, dbUid string) ([]byte, error) {
+	reqUrl := fmt.Sprintf("%s/api/dashboards/uid/%s", source, dbUid)
+	body, err := GetReq(reqUrl, source.ApiToken)
 	if err != nil {
 		log.Println("Error fetching dashboard:", err)
-		return nil, fmt.Errorf("Error fetching dashboard: %s", err)
+		return nil, fmt.Errorf("error fetching dashboard: %s", err)
 	}
 	// var jsonBody map[string]interface{}
 	// err = json.Unmarshal(body, &jsonBody)
@@ -100,22 +55,14 @@ func GetDashboardByUid(source, apiToken, dbUid string) ([]byte, error) {
 	// }
 	return body, nil
 }
-func SetDashboards(dest string, apiToken string, dashboards []Dashboardinfo) error {
-	for _, dashboard := range dashboards {
-		fmt.Printf("ID: %d, UID: %s, Title: %s\n", dashboard.ID, dashboard.UID, dashboard.Title)
-		if dashboard.FolderID == 0 {
-			//Dashboard in root folder
-			dashboard, err := GetDashboardByUid(dest, apiToken, dashboard.UID)
-			if err != nil {
-				log.Println("Error fetching dashboard:", err)
-				return fmt.Errorf("Error fetching dashboard: %s", err)
-			}
+func SetDashboard(dest Grafana, dashboard []byte) error {
+	destUrl := fmt.Sprintf("%s/api/dashboards/db", dest)
+	// jsonDashboard, err := json.Marshal(dashboard)
+	// if err != nil {
+	// 	fmt.Println("Error marshaling JSON:", err)
+	// 	return fmt.Errorf("Error marshaling JSON: %s", err)
+	// }
+	PostReq(destUrl, dest.ApiToken, dashboard)
 
-			destUrl := fmt.Sprintf("%s/api/dashboards/db", dest)
-			PostReq(destUrl, apiToken, dashboard)
-		} else {
-			//Dashboard in subfolder
-		}
-	}
 	return nil
 }

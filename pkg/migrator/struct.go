@@ -76,3 +76,8 @@ type Response struct {
 	APIVersion int     `json:"apiVersion"`
 	Groups     []Group `json:"groups"`
 }
+
+type Grafana struct {
+	Url      string
+	ApiToken string
+}

@@ -21,7 +21,12 @@ func ExportAlerts(apiToken, grafanaURL string) (Response, error) {
 
 func ImportAlerts(apiToken, grafanaURL string, alerts Response) error {
 	url := fmt.Sprintf("%s/api/v1/provisioning/alert-rules", grafanaURL)
-	_, err := PostReq(url, apiToken, alerts)
+	jsonAlert, err := json.Marshal(alerts)
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return fmt.Errorf("error marshaling JSON: %s", err)
+	}
+	_, err = PostReq(url, apiToken, jsonAlert)
 	if err != nil {
 		return err
 	}
