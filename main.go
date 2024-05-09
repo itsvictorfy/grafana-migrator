@@ -16,58 +16,71 @@ var (
 )
 
 func initDev() {
+	// var source migrator.Grafana
+	// var dest migrator.Grafana
 	err := godotenv.Load()
 	if err != nil {
-		log.Printf("Error loading .env file")
+		log.Printf(".env file doesnt exists")
 		return
 	}
 	source.Url = os.Getenv("SOURCE_URL")
 	source.ApiToken = os.Getenv("SOURCE_API_TOKEN")
 	dest.Url = os.Getenv("DEST_URL")
 	dest.ApiToken = os.Getenv("DEST_API_TOKEN")
+	log.Printf("Succesfully loaded vars .env file")
+	if source.Url == "" || source.ApiToken == "" || dest.Url == "" || dest.ApiToken == "" {
+		log.Fatal("Source and target URLs and tokens must be provided")
+		os.Exit(3)
+	}
 
-	// Access environment variables
 }
+
 func initDocker() {
-	var source migrator.Grafana
-	var dest migrator.Grafana
+
 	source.Url = os.Getenv("SOURCE_URL")
 	source.ApiToken = os.Getenv("SOURCE_API_TOKEN")
 	dest.Url = os.Getenv("DEST_URL")
 	dest.ApiToken = os.Getenv("DEST_API_TOKEN")
+	if source.Url == "" || source.ApiToken == "" || dest.Url == "" || dest.ApiToken == "" {
+		log.Fatal("Source and target URLs and tokens must be provided")
+		os.Exit(3)
+	}
+	log.Printf("Succesfully loaded vars .env file")
 }
 
-func init() {
+func initvars() {
 	env := os.Getenv("ENV")
-	if env == "docker" {
-		initDocker()
-	} else {
+	if env != "docker" {
+		log.Printf("Not Docker-Getting vars from .env")
 		initDev()
-	}
-	if source.Url == "" || source.ApiToken == "" || dest.Url == "" || dest.ApiToken == "" {
-		initFlags()
-	}
-}
-func initFlags() {
-	flag.StringVar(&source.Url, "source", "", "Source Grafana URL")
-	flag.StringVar(&source.ApiToken, "sourceToken", "", "Source Grafana API Token")
-	flag.StringVar(&dest.Url, "target", "", "Target Grafana URL")
-	flag.StringVar(&dest.ApiToken, "targetToken", "", "Target Grafana API Token")
-	versionFlag := flag.Bool("version", false, "Print the version number")
-	flag.Parse()
-	if *versionFlag {
-		fmt.Println("Version: 1.0.0") // Update with your version number
-		os.Exit(0)
+	} else {
+		log.Printf("Docker-Getting vars from Docker env Vars")
+		initDocker()
 	}
 }
 
 func main() {
-	versionFlag := flag.Bool("version", false, "Print the version number")
+	sc := flag.String("source", "", "a string")
+	ds := flag.String("target", "", "a string")
+	sckey := flag.String("sourceToken", "", "a string")
+	dskey := flag.String("targetToken", "", "a string")
+	ver := flag.Bool("version", false, "a bool")
 	flag.Parse()
-	if *versionFlag {
-		fmt.Println("Version: 1.0.0") // Update with your version number
+	if *ver {
+		fmt.Println("v0.0.1")
 		os.Exit(0)
 	}
-	fmt.Printf("source %s, %s", source.Url, source.ApiToken)
-	fmt.Printf("dest %s, %s", dest.Url, dest.ApiToken)
+	if *sc == "" || *ds == "" || *sckey == "" || *dskey == "" {
+		log.Printf("no flags were captured starting dev/docker initialization")
+		initvars()
+	} else {
+		source.Url = *sc
+		source.ApiToken = *sckey
+		dest.Url = *ds
+		dest.ApiToken = *dskey
+		fmt.Printf("source %s, %s\n", source.Url, source.ApiToken)
+		fmt.Printf("dest %s, %s\n", dest.Url, dest.ApiToken)
+	}
+	fmt.Printf("source %s, %s\n", source.Url, source.ApiToken)
+	fmt.Printf("dest %s, %s\n", dest.Url, dest.ApiToken)
 }
